@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { getSupabase } from '@/lib/supabase';
 
-const supabase = getSupabase();
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -13,6 +11,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId) => {
+    const supabase = getSupabase();
     if (!supabase) return;
     const { data, error } = await supabase
       .from('profiles')
@@ -26,6 +25,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    const supabase = getSupabase();
     if (!supabase) {
       setLoading(false);
       return;
@@ -63,6 +63,7 @@ export function AuthProvider({ children }) {
   }, [fetchProfile]);
 
   const signInWithEmail = async (email, password) => {
+    const supabase = getSupabase();
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -76,6 +77,7 @@ export function AuthProvider({ children }) {
   };
 
   const signUpWithEmail = async (email, password, fullName) => {
+    const supabase = getSupabase();
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -97,6 +99,7 @@ export function AuthProvider({ children }) {
   };
 
   const signInWithTaalimMa = async (taalimEmail, password) => {
+    const supabase = getSupabase();
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -113,6 +116,7 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
+    const supabase = getSupabase();
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     try {
       const { error } = await supabase.auth.signOut();
