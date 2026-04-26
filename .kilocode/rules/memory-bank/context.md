@@ -1,87 +1,80 @@
-# Active Context: Next.js Starter Template
+# Active Context: Ar-Ra'id Connect (Peer-Learning Platform)
 
 ## Current State
 
-**Template Status**: ✅ Ready for development
+**Project Status**: Core MVP Implementation Complete
 
-The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. It's ready for AI-assisted expansion to build any type of application.
+Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teachers in Pioneer Schools. Built with Next.js 16, Supabase, RTL Arabic interface.
+
+**Build Status**: Production build successful (0 errors, 6 warnings)
+
+---
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
+- [x] TypeScript → JavaScript conversion
+- [x] Supabase + GSAP installed
+- [x] Tailwind with Zen palette (blues/greys, NO green)
+- [x] Full Supabase setup (client, schema, storage)
+- [x] Authentication (email + @taalim.ma simulation)
+- [x] Video feed with filtering (pedagogy, subject, grade, tags)
+- [x] Threaded comments system
+- [x] Resource repository (LaTeX, Beamer, exams)
+- [x] Search functionality
+- [x] Moroccan educational terminology in UI
+- [x] GSAP animations
+- [x] Documentation (README, SETUP_GUIDE)
+- [x] Build fixed and verified
 
-## Current Structure
+---
 
-| File/Directory | Purpose | Status |
-|----------------|---------|--------|
-| `src/app/page.tsx` | Home page | ✅ Ready |
-| `src/app/layout.tsx` | Root layout | ✅ Ready |
-| `src/app/globals.css` | Global styles | ✅ Ready |
-| `.kilocode/` | AI context & recipes | ✅ Ready |
+## Architecture
 
-## Current Focus
+**Frontend**: Next.js 16 + React 19 + Tailwind CSS v4 + GSAP  
+**Backend**: Supabase (PostgreSQL, Auth, Storage)  
+**Language**: JavaScript (no TypeScript)  
+**Direction**: RTL Arabic
 
-The template is ready. Next steps depend on user requirements:
+### Core Pages
+- `/` - Landing page (hero, features, CTA)
+- `/capsules` - Video feed with filters
+- `/resources` - Document repository
+- `/auth/login` - Sign in
+- `/auth/signup` - Register
+- `/auth/callback` - OAuth callback
 
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
+### Data Flow
+Hooks (useVideos, useComments, useResources, useAuth) → Supabase client → PostgreSQL with RLS
 
-## Quick Start Guide
+---
 
-### To add a new page:
+## Design System
 
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
-```
+- **Colors**: blue-600 primary, slate for neutrals, amber accent
+- **Typography**: Amiri (headings) + Noto Sans Arabic (body)
+- **Spacing**: Comfortable (Zen philosophy)
+- **Animations**: GSAP (fade-in, card hover, modal scale)
 
-### To add components:
+---
 
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
+## Database Overview
 
-### To add a database:
+Tables: profiles, videos, comments, resources, video_likes, comment_likes, video_views, resource_downloads
 
-Follow `.kilocode/recipes/add-database.md`
+Features:
+- Full-text search (Arabic-capable)
+- Automatic counters (views, likes, comments)
+- Triggers for timestamp updates
+- RLS policies for security
 
-### To add API routes:
+---
 
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
+## Status
 
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
+The project is **ready for development**. Next steps:
+1. Set up Supabase project with schema.sql
+2. Create storage buckets
+3. Add .env.local with credentials
+4. Run `bun dev` to start
 
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
-
-## Session History
-
-| Date | Changes |
-|------|---------|
-| Initial | Template created with base setup |
+See SETUP_GUIDE.md for detailed instructions.

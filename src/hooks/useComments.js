@@ -1,5 +1,9 @@
+'use client';
+
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+
+const supabase = getSupabase();
 
 export function useComments(videoId) {
   const [comments, setComments] = useState([]);
@@ -11,7 +15,7 @@ export function useComments(videoId) {
     isMountedRef.current = true;
 
     const fetchComments = async () => {
-      if (!videoId) return;
+      if (!supabase || !videoId) return;
 
       setLoading(true);
       const { data, error } = await supabase
@@ -53,7 +57,7 @@ export function useComments(videoId) {
   }, [videoId]);
 
   const addComment = useCallback(async (userId, content, parentId = null) => {
-    if (!videoId || !userId) return;
+    if (!supabase || !videoId || !userId) return;
 
     const { data, error } = await supabase
       .from('comments')
@@ -89,6 +93,8 @@ export function useComments(videoId) {
   }, [videoId]);
 
   const deleteComment = useCallback(async (commentId, userId) => {
+    if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
+
     const { error } = await supabase
       .from('comments')
       .delete()
@@ -117,7 +123,7 @@ export function useComments(videoId) {
   }, []);
 
   const toggleCommentLike = useCallback(async (commentId, userId) => {
-    if (!userId) return;
+    if (!supabase || !userId) return;
 
     const existingLike = await supabase
       .from('comment_likes')
@@ -146,6 +152,6 @@ export function useComments(videoId) {
     addComment,
     deleteComment,
     toggleCommentLike,
-    refetch: () => {}, // Not needed with this pattern
+    refetch: () => {},
   };
 }

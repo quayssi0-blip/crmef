@@ -138,7 +138,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white text-center">
           <h2 className="text-3xl font-bold mb-6">ضمن مشروع البحث التربوي</h2>
           <p className="text-xl opacity-90 leading-relaxed max-w-3xl mx-auto">
-            "تأثير التدريب twisty بين الأقران على الأداء التربوي للمعلمين في المدارس الرائدة"
+            &ldquo;تأثير التدريب twisty بين الأقران على الأداء التربوي للمعلمين في المدارس الرائدة&rdquo;
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm opacity-80">
             <span className="px-4 py-2 bg-white/20 rounded-full">التعلم النشط (TaRL)</span>
@@ -188,7 +188,7 @@ export default function Home() {
             منصة التعلم بين الأقران للمعلمين المغاربة
           </p>
           <p className="text-sm opacity-60">
-            © 2024 Ar-Ra'id Connect. جميع الحقوق محفوظة.
+            © 2024 Ar-Ra&apos;id Connect. جميع الحقوق محفوظة.
           </p>
         </div>
       </footer>

@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
-export default function AuthCallbackPage() {
+const supabase = getSupabase();
+
+export const dynamic = 'force-dynamic';
+
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState(null);
@@ -12,13 +16,16 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Handle OAuth callback
+      if (!supabase) {
+        setError('Supabase غير مهيأ');
+        return;
+      }
+
       const { error } = await supabase.auth.getSession();
 
       if (error) {
         setError(error.message);
       } else {
-        // Successfully authenticated
         const type = searchParams.get('type');
         if (type === 'signup') {
           setMessage('تم التحقق من بريدك الإلكتروني بنجاح!');
@@ -59,8 +66,23 @@ export default function AuthCallbackPage() {
       <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2">جاري التحقق...</h2>
-        <p className="text-slate-600">{message || 'يرجى الانتظار'} </p>
+        <p className="text-slate-600">{message || 'يرجى الانتظار'}</p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+        <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">جاري التحميل...</h2>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

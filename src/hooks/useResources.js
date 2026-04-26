@@ -1,5 +1,9 @@
+'use client';
+
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+
+const supabase = getSupabase();
 
 export function useResources(initialFilters = {}) {
   const [resources, setResources] = useState([]);
@@ -13,6 +17,11 @@ export function useResources(initialFilters = {}) {
     isMountedRef.current = true;
 
     const fetchResources = async () => {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -78,12 +87,13 @@ export function useResources(initialFilters = {}) {
   };
 
   const incrementDownload = useCallback(async (resourceId) => {
+    if (!supabase) return;
+
     // Update local state optimistically
     setResources(prev => prev.map(r =>
       r.id === resourceId ? { ...r, download_count: (r.download_count || 0) + 1 } : r
     ));
 
-    // Call server function
     try {
       await supabase.rpc('increment_download', {
         resource_uuid: resourceId,
@@ -93,6 +103,7 @@ export function useResources(initialFilters = {}) {
       setResources(prev => prev.map(r =>
         r.id === resourceId ? { ...r, download_count: Math.max(0, (r.download_count || 0) - 1) } : r
       ));
+      console.error('Download increment failed:', error);
     }
   }, []);
 
@@ -119,7 +130,7 @@ export function useResourceById(resourceId) {
     isMountedRef.current = true;
 
     const fetchResource = async () => {
-      if (!resourceId) return;
+      if (!supabase || !resourceId) return;
 
       const { data, error } = await supabase
         .from('resources')

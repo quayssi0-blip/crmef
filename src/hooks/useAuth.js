@@ -1,5 +1,9 @@
+'use client';
+
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+
+const supabase = getSupabase();
 
 const AuthContext = createContext(null);
 
@@ -9,6 +13,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId) => {
+    if (!supabase) return;
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -21,19 +26,27 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    // Get initial session
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      }
+    if (!supabase) {
       setLoading(false);
+      return;
+    }
+
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (err) {
+        console.error('Auth init error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
@@ -50,11 +63,13 @@ export function AuthProvider({ children }) {
   }, [fetchProfile]);
 
   const signInWithEmail = async (email, password) => {
+    if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signUpWithEmail = async (email, password, fullName) => {
+    if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -67,8 +82,8 @@ export function AuthProvider({ children }) {
     return { error };
   };
 
-  // Simulated @taalim.ma login
   const signInWithTaalimMa = async (taalimEmail, password) => {
+    if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     const { error } = await supabase.auth.signInWithPassword({
       email: taalimEmail,
       password,
@@ -77,6 +92,7 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
+    if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
     const { error } = await supabase.auth.signOut();
     setProfile(null);
     return { error };
