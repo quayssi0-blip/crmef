@@ -1,1 +1,88 @@
 @import "tailwindcss";
+
+@theme {
+  /* Primary Blue Palette - calm, professional blues */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  /* Neutral Greys - zen, calm */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* Warm neutrals for backgrounds */
+  --color-warm-50: #fefcfb;
+  --color-warm-100: #fdf8f3;
+  --color-warm-200: #f9efe3;
+  --color-warm-300: #f4e4d0;
+  --color-warm-400: #edd4b8;
+
+  /* Accent Amber - warm, inviting (no green) */
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+
+  /* Ensure no green variants */
+  --color-green-0: transparent;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-geist-sans), 'Amiri', 'Noto Sans Arabic', sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Custom zen-like spacing */
+.container-zen {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Video card animations */
+.video-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.video-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth button transitions */
+.btn-primary {
+  background-color: var(--color-blue-600);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-blue-700);
+  transform: scale(1.02);
+}
+
+/* Form input focus states */
+.input-zen:focus {
+  outline: none;
+  border-color: var(--color-blue-400);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
