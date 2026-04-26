@@ -64,38 +64,63 @@ export function AuthProvider({ children }) {
 
   const signInWithEmail = async (email, password) => {
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        return { error };
+      }
+      return { error: null, data };
+    } catch (err) {
+      return { error: { message: err.message || 'حدث خطأ في تسجيل الدخول' } };
+    }
   };
 
   const signUpWithEmail = async (email, password, fullName) => {
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
         },
-      },
-    });
-    return { error };
+      });
+      if (error) {
+        return { error };
+      }
+      return { error: null, data };
+    } catch (err) {
+      return { error: { message: err.message || 'حدث خطأ في الاتصال بالخادم' } };
+    }
   };
 
   const signInWithTaalimMa = async (taalimEmail, password) => {
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
-    const { error } = await supabase.auth.signInWithPassword({
-      email: taalimEmail,
-      password,
-    });
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: taalimEmail,
+        password,
+      });
+      if (error) {
+        return { error };
+      }
+      return { error: null, data };
+    } catch (err) {
+      return { error: { message: err.message || 'حدث خطأ في تسجيل الدخول' } };
+    }
   };
 
   const signOut = async () => {
     if (!supabase) return { error: { message: 'Supabase غير مهيأ' } };
-    const { error } = await supabase.auth.signOut();
-    setProfile(null);
-    return { error };
+    try {
+      const { error } = await supabase.auth.signOut();
+      setProfile(null);
+      return { error };
+    } catch (err) {
+      return { error: { message: err.message || 'حدث خطأ في تسجيل الخروج' } };
+    }
   };
 
   const value = {

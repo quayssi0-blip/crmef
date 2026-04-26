@@ -45,17 +45,32 @@ export default function SignupPage() {
       return;
     }
 
-    const { error } = await signUpWithEmail(
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('البريد الإلكتروني غير صالح');
+      setLoading(false);
+      return;
+    }
+
+    const result = await signUpWithEmail(
       formData.email,
       formData.password,
       formData.fullName
     );
 
-    if (error) {
-      if (error.message.includes('already registered')) {
-        setError('هذا البريق الإلكتروني مسجل مسبقاً');
+    if (result.error) {
+      const msg = result.error.message || String(result.error);
+      if (msg.includes('already registered') || msg.includes('already registered')) {
+        setError('هذا البريد الإلكتروني مسجل مسبقاً');
+      } else if (msg.includes('weak password') || msg.includes('Password should be at least')) {
+        setError('كلمة المرور ضعيفة، يجب أن تكون 6 أحرف على الأقل وتحتوي على أرقام وحروف');
+      } else if (msg.includes('Invalid email') || msg.includes('invalid email')) {
+        setError('البريد الإلكتروني غير صالح');
+      } else if (msg.includes('network') || msg.includes('Network') || msg.includes('Failed to fetch')) {
+        setError('خطأ في الاتصال بالخادم، يرجى التأكد من اتصالك بالإنترنت');
+      } else if (msg.includes('User already registered')) {
+        setError('هذا البريد الإلكتروني مسجل مسبقاً');
       } else {
-        setError('حدث خطأ أثناء إنشاء الحساب');
+        setError('حدث خطأ أثناء إنشاء الحساب: ' + msg);
       }
     } else {
       router.push('/auth/login?message=check-email');
