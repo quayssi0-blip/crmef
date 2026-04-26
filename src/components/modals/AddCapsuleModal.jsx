@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { getSupabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
 import gsap from 'gsap';
 
 export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
@@ -19,6 +20,8 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
+  const { user } = useAuth();
+  const supabase = getSupabase();
 
   if (!isOpen) return null;
 
@@ -30,7 +33,7 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
   const handleVideoSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 500 * 1024 * 1024) { // 500MB limit
+      if (file.size > 500 * 1024 * 1024) {
         setError('حجم الفيديو يجب أن يكون أقل من 500 ميجابايت');
         return;
       }
@@ -52,9 +55,14 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
     setError('');
     setUploadProgress(0);
 
-    const supabase = getSupabase();
     if (!supabase) {
       setError('Supabase غير مهيأ');
+      setLoading(false);
+      return;
+    }
+
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً');
       setLoading(false);
       return;
     }
@@ -66,19 +74,10 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
     }
 
     try {
-      const user = supabase.auth.getUser();
-      if (!user?.data?.user) {
-        setError('يجب تسجيل الدخول أولاً');
-        setLoading(false);
-        return;
-      }
-
-      // Generate unique filenames
       const fileExt = videoFile.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `cap/${fileName}`;
 
-      // Upload video to Supabase storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('cap')
         .upload(filePath, videoFile, {
@@ -94,12 +93,10 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
         throw new Error(`فشل رفع الفيديو: ${uploadError.message}`);
       }
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('cap')
         .getPublicUrl(filePath);
 
-      // Upload thumbnail if provided
       let thumbnailUrl = null;
       if (thumbnailFile) {
         const thumbExt = thumbnailFile.name.split('.').pop();
@@ -123,19 +120,17 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
         }
       }
 
-      // Parse tags
       const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : [];
 
-      // Insert video record
       const { data, error: insertError } = await supabase
         .from('videos')
         .insert([{
-          user_id: user.data.user.id,
+          user_id: user.id,
           title: formData.title,
           description: formData.description,
           video_url: publicUrl,
           thumbnail_url: thumbnailUrl,
-          duration_seconds: 0, // Can be updated later
+          duration_seconds: 0,
           pedagogical_approach: formData.pedagogical_approach,
           subject: formData.subject,
           grade_level: formData.grade_level,
@@ -149,7 +144,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
         throw new Error(`فشل حفظ البيانات: ${insertError.message}`);
       }
 
-      // Animate success
       gsap.fromTo('.success-message',
         { scale: 0.8, opacity: 0 },
         { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.7)' }
@@ -183,12 +177,9 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex min-h-screen items-center justify-center p-4">
-        {/* Overlay */}
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={handleClose}></div>
 
-        {/* Modal */}
         <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-2xl">
             <h3 id="modal-title" className="text-xl font-bold text-white">
               إضافة كبسولة جديدة
@@ -202,7 +193,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </div>
             )}
 
-            {/* Title */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">عنوان الكبسولة *</label>
               <input
@@ -216,7 +206,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">وصف الكبسولة</label>
               <textarea
@@ -229,7 +218,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               ></textarea>
             </div>
 
-            {/* Video File */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">ملف الفيديو *</label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-blue-400 transition-colors">
@@ -259,13 +247,12 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
 
-            {/* Thumbnail */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">صورة المصغرة (اختياري)</label>
               <div className="mt-1 flex justify-center px-6 pt-3 pb-4 border-2 border-slate-300 border-dashed rounded-lg hover:border-blue-400 transition-colors">
                 <div className="space-y-2 text-center">
                   <svg className="mx-auto h-10 w-10 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M20 16l6 6m-6-6l6-6m-6 18h12a2 2 0 002-2V8a2 2 0 00-2-2H12a2 2 0 00-2 2v20a2 2 0 002 2h12a2 2 0 002-2m-6-10l-6-6m0 0l-6 6m6-6v12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M20 16l6 6m-6-6l-6-6m12 18h12a2 2 0 002-2V8a2 2 0 00-2-2H12a2 2 0 00-2 2v20a2 2 0 002 2h12a2 2 0 002-2m-6-10l-6-6m0 0l-6 6m6-6v12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <div className="flex text-sm text-slate-600">
                     <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
@@ -287,7 +274,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
 
-            {/* Upload Progress */}
             {uploadProgress > 0 && uploadProgress < 100 && (
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-slate-600 mb-2">
@@ -303,7 +289,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </div>
             )}
 
-            {/* Pedagogical Approach */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">المنهج التربوي *</label>
               <select
@@ -319,7 +304,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </select>
             </div>
 
-            {/* Subject */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">المادة *</label>
               <select
@@ -339,7 +323,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </select>
             </div>
 
-            {/* Grade Level */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">السنة الدراسية *</label>
               <select
@@ -358,7 +341,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               </select>
             </div>
 
-            {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">وسوم (مفصولة بفواصل)</label>
               <input
@@ -371,7 +353,6 @@ export default function AddCapsuleModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 pt-4">
               <button
                 type="button"
