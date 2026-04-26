@@ -23,12 +23,10 @@ export default function LoginPage() {
 
     if (error) {
       const msg = error.message || String(error);
-      if (msg.includes('Invalid login credentials') || msg.includes('Invalid password') || msg.includes('no user')) {
+      if (msg.includes('Invalid login credentials') || msg.includes('Invalid password') || msg.includes('no user') || msg.includes('Email not found')) {
         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       } else if (msg.includes('network') || msg.includes('Network') || msg.includes('Failed to fetch')) {
         setError('خطأ في الاتصال بالخادم، يرجى التأكد من اتصالك بالإنترنت');
-      } else if (msg.includes('email') || msg.includes('Email')) {
-        setError('البريد الإلكتروني غير صالح');
       } else {
         setError('حدث خطأ في تسجيل الدخول: ' + msg);
       }
@@ -49,7 +47,7 @@ export default function LoginPage() {
     const { error } = await signInWithTaalimMa(email, password);
     if (error) {
       const msg = error.message || String(error);
-      if (msg.includes('Invalid login credentials') || msg.includes('Invalid password') || msg.includes('no user')) {
+      if (msg.includes('Invalid login credentials') || msg.includes('Invalid password') || msg.includes('no user') || msg.includes('Email not found')) {
         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       } else if (msg.includes('network') || msg.includes('Network')) {
         setError('خطأ في الاتصال بالخادم');
