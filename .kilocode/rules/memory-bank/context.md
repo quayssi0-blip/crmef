@@ -2,7 +2,7 @@
 
 ## Current State
 
-**Project Status**: Core MVP Implementation Complete
+**Project Status**: Core MVP Implementation Complete - Error handling improvements applied
 
 Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teachers in Pioneer Schools. Built with Next.js 16, Supabase, RTL Arabic interface.
 
@@ -12,7 +12,7 @@ Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teach
 
 ## Recently Completed
 
-- [x] TypeScript → JavaScript conversion
+- [x] TypeScript -> JavaScript conversion
 - [x] Supabase + GSAP installed
 - [x] Tailwind with Zen palette (blues/greys, NO green)
 - [x] Full Supabase setup (client, schema, storage)
@@ -25,26 +25,41 @@ Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teach
 - [x] GSAP animations
 - [x] Documentation (README, SETUP_GUIDE)
 - [x] Build fixed and verified
+- [x] Improved Supabase auth error handling with specific user messages
+
+---
+
+### Auth Error Handling Fixes
+
+- **Issue**: Registration showed generic "حدث خطأ أثناء انشاء الحساب" for all errors
+- **Fix**: Added try-catch wrappers and specific error detection for:
+  - Already registered accounts
+  - Weak passwords
+  - Invalid email format
+  - Network errors
+  - Shows actual error messages instead of generic fallback
+- **Files**: src/lib/supabase.js, src/hooks/useAuth.js, src/app/auth/signup/page.jsx
+- **Added**: .env, .env.local, next.config.js with Supabase credentials
 
 ---
 
 ## Architecture
 
-**Frontend**: Next.js 16 + React 19 + Tailwind CSS v4 + GSAP  
-**Backend**: Supabase (PostgreSQL, Auth, Storage)  
-**Language**: JavaScript (no TypeScript)  
+**Frontend**: Next.js 16 + React 19 + Tailwind CSS v4 + GSAP
+**Backend**: Supabase (PostgreSQL, Auth, Storage)
+**Language**: JavaScript (no TypeScript)
 **Direction**: RTL Arabic
 
 ### Core Pages
-- `/` - Landing page (hero, features, CTA)
-- `/capsules` - Video feed with filters
-- `/resources` - Document repository
-- `/auth/login` - Sign in
-- `/auth/signup` - Register
-- `/auth/callback` - OAuth callback
+- / - Landing page (hero, features, CTA)
+- /capsules - Video feed with filters
+- /resources - Document repository
+- /auth/login - Sign in
+- /auth/signup - Register
+- /auth/callback - OAuth callback
 
 ### Data Flow
-Hooks (useVideos, useComments, useResources, useAuth) → Supabase client → PostgreSQL with RLS
+Hooks (useVideos, useComments, useResources, useAuth) -> Supabase client -> PostgreSQL with RLS
 
 ---
 
