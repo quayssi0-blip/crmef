@@ -2,11 +2,12 @@
 
 ## Current State
 
-**Project Status**: Core MVP Implementation Complete - All Pages & Navigation
+**Project Status**: Core MVP Implementation Complete - All Pages & Navigation  
+**Security Fix**: Supabase SSR token refresh race condition resolved
 
 Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teachers in Pioneer Schools. Built with Next.js 16, Supabase, RTL Arabic interface.
 
-**Build Status**: Production build successful (0 errors, 6 warnings)
+**Build Status**: Production build successful (0 errors, 6 warnings - all pre-existing)
 
 ---
 
@@ -28,10 +29,11 @@ Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teach
 - [x] Improved Supabase auth error handling with specific user messages
 - [x] Next.js navigation routing in navbar
 - [x] User profile page
+- [x] **FIXED: Invalid Refresh Token race condition (SSR middleware)**
 
 ---
 
-### Auth Error Handling Fixes
+### Auth Error Handling Fixes & SSR Token Refresh Fix
 
 **Login Page** (`src/app/auth/login/page.jsx`):
 - Replaced generic "بيانات الدخول غير صحيحة" with specific error messages
@@ -47,30 +49,29 @@ Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teach
 **useAuth.js** (`src/hooks/useAuth.js`):
 - Added try-catch wrappers to all auth functions
 - Returns consistent {error, data} structure
-- Restored AuthProvider export (149 lines, full implementation)
+- Restored AuthProvider export
+- Added detection and recovery for "Invalid Refresh Token" errors on auth init
+- Auto-signOut local tokens when invalid refresh token detected
+- Handles TOKEN_REFRESHED and SIGNED_OUT auth state events
 
-### Navigation Implementation (`src/components/Navbar.jsx`)
+**Supabase Client** (`src/lib/supabase.js`):
+- Added @supabase/ssr v0.10.2 with `skipAutoInitialize` to prevent race conditions
+- `createSupabaseServerClient()` - Server-side client for middleware/SSR
+- `createSupabaseBrowserClient()` - Browser client with persisted sessions
+- `getSupabase()` - Legacy backward-compatible client wrapper
+- Fixed: Single-use refresh token race condition causing "Invalid Refresh Token: Refresh Token Not Found"
 
-- Converted plain `<a>` anchor tags to Next.js `<Link>` components
-- Routing:
-  - الصفحة الرئيسية -> `/`
-  - الكبسولات -> `/capsules` (video feed)
-  - الموارد -> `/resources` (document repository)
-  - تسجيل الدخول -> `/auth/login`
-  - إنشاء حساب -> `/auth/signup`
-  - ملفي الشخصي -> `/profile` (for authenticated users)
-- Fixed signOut to properly await and close mobile menu
-- Removed duplicate 'use client' declaration
+**Middleware** (`src/middleware.js`):
+- NEW: JWT expiry check before calling refresh (only refreshes within 5 min of expiry)
+- Avoids unnecessary server-side token refresh on every request
+- Non-fatal error handling - auth errors don't block page rendering
+- Client-side recovery for invalid token scenarios
+- Skips auth check for static files, API routes, and auth/callback
 
-### Profile Page (`src/app/profile/page.jsx`)
-
-- User profile accessible at `/profile`
-- Redirects to login if not authenticated
-- Displays: user info, email, school, specialization
-- Shows stats: videos count, likes, comments, views
-- Links to user's videos and resources
-- Sign out with redirect to home
-- GSAP card entrance animation
+**Auth Callback** (`src/app/auth/callback/page.jsx`):
+- Handles "Invalid Refresh Token" error with graceful recovery
+- Auto-signOut and redirect to login when token is invalid
+- Catches unexpected errors without blocking UX
 
 ---
 
@@ -125,3 +126,19 @@ The project is **ready for development**. Next steps:
 4. Run `bun dev` to start
 
 See SETUP_GUIDE.md for detailed instructions.
+
+---
+
+## Root Cause Analysis: Invalid Refresh Token Error
+
+**Problem**: Supabase's single-use refresh tokens combined with SSR middleware calling `getUser()` on every request created a race condition. When the browser didn't receive the updated cookie (interrupted navigation, slow connection), it would later present the now-invalidated refresh token, causing `AuthApiError: Invalid Refresh Token: Refresh Token Not Found`.
+
+**Solution**: 
+1. Use `@supabase/ssr` with `skipAutoInitialize: true` to prevent background token refresh races
+2. Check JWT expiry in middleware before triggering refresh (only refresh within 5 min of expiry)
+3. Non-fatal error handling - middleware never throws, client handles recovery
+4. Client-side detection of invalid token errors with auto-signOut and recovery
+
+**References**:
+- https://github.com/supabase/ssr/issues/190
+- https://github.com/supabase/ssr/issues/68

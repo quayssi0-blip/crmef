@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { getSupabase } from '@/lib/supabase';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -10,10 +10,9 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (userId) => {
-    const supabase = getSupabase();
-    if (!supabase) return;
-    const { data, error } = await supabase
+  const fetchProfile = useCallback(async (userId, client) => {
+    if (!client) return;
+    const { data, error } = await client
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -25,7 +24,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const supabase = getSupabase();
+    const supabase = createSupabaseBrowserClient();
     if (!supabase) {
       setLoading(false);
       return;
@@ -33,10 +32,27 @@ export function AuthProvider({ children }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        // If we get an invalid refresh token error, try to recover
+        // by forcing a re-auth check via the server
+        if (error?.message?.includes('Invalid Refresh Token')) {
+          console.warn('Invalid refresh token detected, attempting recovery...');
+          try {
+            // Sign out locally to clear bad tokens
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch (signOutErr) {
+            // Ignore sign out errors during recovery
+          }
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+        
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, supabase);
         }
       } catch (err) {
         console.error('Auth init error:', err);
@@ -49,9 +65,19 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Handle token refresh events
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed successfully');
+        }
+        
+        // Handle invalid token events
+        if (event === 'SIGNED_OUT' && !session) {
+          setProfile(null);
+        }
+        
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, supabase);
         } else {
           setProfile(null);
         }

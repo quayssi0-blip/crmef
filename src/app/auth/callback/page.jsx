@@ -2,9 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getSupabase } from '@/lib/supabase';
-
-const supabase = getSupabase();
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,16 +14,24 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      if (!supabase) {
-        setError('Supabase غير مهيأ');
-        return;
-      }
+      const supabase = createSupabaseBrowserClient();
 
-      const { error } = await supabase.auth.getSession();
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (error) {
-        setError(error.message);
-      } else {
+        // Handle specific auth errors
+        if (error?.message?.includes('Invalid Refresh Token')) {
+          // Token is invalid, clear it and redirect to login
+          await supabase.auth.signOut({ scope: 'local' });
+          router.push('/auth/login');
+          return;
+        }
+
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
         const type = searchParams.get('type');
         if (type === 'signup') {
           setMessage('تم التحقق من بريدك الإلكتروني بنجاح!');
@@ -33,6 +39,9 @@ function AuthCallbackContent() {
         } else {
           router.push('/');
         }
+      } catch (err) {
+        // Network or unexpected error - let client-side auth handle it
+        router.push('/');
       }
     };
 
