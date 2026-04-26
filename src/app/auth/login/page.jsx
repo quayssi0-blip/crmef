@@ -22,7 +22,16 @@ export default function LoginPage() {
     const { error } = await signInWithEmail(email, password);
 
     if (error) {
-      setError('بيانات الدخول غير صحيحة');
+      const msg = error.message || String(error);
+      if (msg.includes('Invalid login credentials') || msg.includes('Invalid password') || msg.includes('no user')) {
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      } else if (msg.includes('network') || msg.includes('Network') || msg.includes('Failed to fetch')) {
+        setError('خطأ في الاتصال بالخادم، يرجى التأكد من اتصالك بالإنترنت');
+      } else if (msg.includes('email') || msg.includes('Email')) {
+        setError('البريد الإلكتروني غير صالح');
+      } else {
+        setError('حدث خطأ في تسجيل الدخول: ' + msg);
+      }
     } else {
       router.push('/');
     }
@@ -39,7 +48,14 @@ export default function LoginPage() {
     setError('');
     const { error } = await signInWithTaalimMa(email, password);
     if (error) {
-      setError('فشل تسجيل الدخول');
+      const msg = error.message || String(error);
+      if (msg.includes('Invalid login credentials') || msg.includes('Invalid password') || msg.includes('no user')) {
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      } else if (msg.includes('network') || msg.includes('Network')) {
+        setError('خطأ في الاتصال بالخادم');
+      } else {
+        setError('فشل تسجيل الدخول: ' + msg);
+      }
     } else {
       router.push('/');
     }
@@ -114,7 +130,7 @@ export default function LoginPage() {
           {/* Taalim.ma specific login */}
           <div className="mt-6 pt-6 border-t border-slate-200">
             <p className="text-sm text-slate-600 mb-3 text-center">
-              للعاملين في sector التعليم باستخدام حساب taalim.ma
+              للعاملين في قطاع التعليم باستخدام حساب taalim.ma
             </p>
             <button
               onClick={handleTaalimMaLogin}
