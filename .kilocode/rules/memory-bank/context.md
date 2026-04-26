@@ -2,7 +2,7 @@
 
 ## Current State
 
-**Project Status**: Core MVP Implementation Complete - Error handling improvements applied
+**Project Status**: Core MVP Implementation Complete - Navigation & Error Handling
 
 Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teachers in Pioneer Schools. Built with Next.js 16, Supabase, RTL Arabic interface.
 
@@ -26,40 +26,61 @@ Ar-Ra'id Connect is a fully functional peer-learning platform for Moroccan teach
 - [x] Documentation (README, SETUP_GUIDE)
 - [x] Build fixed and verified
 - [x] Improved Supabase auth error handling with specific user messages
+- [x] Next.js navigation routing in navbar
 
 ---
 
 ### Auth Error Handling Fixes
 
-- **Issue**: Registration showed generic "حدث خطأ أثناء انشاء الحساب" for all errors
-- **Fix**: Added try-catch wrappers and specific error detection for:
-  - Already registered accounts
-  - Weak passwords
-  - Invalid email format
-  - Network errors
-  - Shows actual error messages instead of generic fallback
-- **Files**: src/lib/supabase.js, src/hooks/useAuth.js, src/app/auth/signup/page.jsx
-- **Added**: .env, .env.local, next.config.js with Supabase credentials
+**Login Page** (`src/app/auth/login/page.jsx`):
+- Replaced generic "بيانات الدخول غير صحيحة" with specific error messages
+- Detects: wrong credentials, network errors
+- Shows actual Supabase error for unknown issues
+- Removed misleading "invalid email" classification
+
+**Signup Page** (`src/app/auth/signup/page.jsx`):
+- Added client-side email format validation
+- Specific messages for: already registered, weak password, invalid email, network errors
+- Shows actual error message instead of generic fallback
+
+**useAuth.js** (`src/hooks/useAuth.js`):
+- Added try-catch wrappers to all auth functions
+- Returns consistent {error, data} structure
+- Restored AuthProvider export (149 lines, full implementation)
+
+### Navigation Implementation (`src/components/Navbar.jsx`)
+
+- Converted plain `<a>` anchor tags to Next.js `<Link>` components
+- Routing:
+  - الصفحة الرئيسية -> `/`
+  - الكبسولات -> `/capsules` (video feed)
+  - الموارد -> `/resources` (document repository)
+  - تسجيل الدخول -> `/auth/login`
+  - إنشاء حساب -> `/auth/signup`
+  - ملفي الشخصي -> `/profile` (for authenticated users)
+- Fixed signOut to properly await and close mobile menu
+- Removed duplicate 'use client' declaration
+- Added aria-label for accessibility
 
 ---
 
 ## Architecture
 
-**Frontend**: Next.js 16 + React 19 + Tailwind CSS v4 + GSAP
-**Backend**: Supabase (PostgreSQL, Auth, Storage)
-**Language**: JavaScript (no TypeScript)
+**Frontend**: Next.js 16 + React 19 + Tailwind CSS v4 + GSAP  
+**Backend**: Supabase (PostgreSQL, Auth, Storage)  
+**Language**: JavaScript (no TypeScript)  
 **Direction**: RTL Arabic
 
 ### Core Pages
-- / - Landing page (hero, features, CTA)
-- /capsules - Video feed with filters
-- /resources - Document repository
-- /auth/login - Sign in
-- /auth/signup - Register
-- /auth/callback - OAuth callback
+- `/` - Landing page (hero, features, CTA)
+- `/capsules` - Video feed with filters
+- `/resources` - Document repository
+- `/auth/login` - Sign in
+- `/auth/signup` - Register
+- `/auth/callback` - OAuth callback
 
 ### Data Flow
-Hooks (useVideos, useComments, useResources, useAuth) -> Supabase client -> PostgreSQL with RLS
+Hooks (useVideos, useComments, useResources, useAuth) → Supabase client → PostgreSQL with RLS
 
 ---
 
